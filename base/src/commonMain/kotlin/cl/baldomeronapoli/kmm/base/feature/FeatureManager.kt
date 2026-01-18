@@ -168,7 +168,7 @@ class FeatureManager {
      * Notifica a features con navegación cuando el NavController está listo.
      */
     fun notifyNavigationReady(navController: NavHostController) {
-        features.filterIsInstance<NavigationFeature>()
+        features.filterIsInstance<NavigableFeature>()
             .forEach { it.onNavigationReady(navController) }
     }
 
@@ -219,7 +219,7 @@ class FeatureManager {
      */
     fun NavGraphBuilder.registerAllNavigationRoutes() {
         features
-            .filterIsInstance<NavigationFeature>()  // ← Solo features con navegación
+            .filterIsInstance<NavigableFeature>()  // ← Solo features con navegación
             .forEach { feature ->
                 with(feature) {
                     registerNavigation()

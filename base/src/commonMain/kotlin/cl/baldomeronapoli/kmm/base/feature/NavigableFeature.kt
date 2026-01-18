@@ -11,7 +11,7 @@ import cl.baldomeronapoli.kmm.base.navigation.NavigationCoordinator
  * Útil para features que necesitan navegar programáticamente
  * o responder a eventos de navegación.
  */
-interface NavigationFeature : Feature {
+interface NavigableFeature : Feature {
 
     var navigationCoordinator: NavigationCoordinator?
 

@@ -73,7 +73,7 @@ class FeatureBuilder(private val name: String) {
 
     fun build(): Feature {
         return if (navigationRegistration != null) {
-            object : NavigationFeature {
+            object : NavigableFeature {
                 override val featureName: String = name
                 override val priority: Int = priorityValue
                 override var navigationCoordinator: NavigationCoordinator? = null
