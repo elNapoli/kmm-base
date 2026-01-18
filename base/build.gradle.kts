@@ -64,7 +64,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.baldomeronapoli.kmm.base"
+    namespace = "cl.baldomeronapoli.kmm.base"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
@@ -116,7 +116,7 @@ publishing {
 afterEvaluate {
     publishing {
         publications.withType<MavenPublication> {
-            groupId = "com.baldomeronapoli.kmm"
+            groupId = "cl.baldomeronapoli.kmm"
             version = versionProvider.get()
         }
     }

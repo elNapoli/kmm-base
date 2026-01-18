@@ -2,7 +2,9 @@
 
 **Librería base Kotlin Multiplatform Mobile (KMM) con Clean Architecture, MVI y MVVM**
 
-Una librería completa y lista para producción que proporciona una arquitectura robusta para aplicaciones Android e iOS, con gestión de estado moderna, navegación modular y carga perezosa de features.
+Una librería completa y lista para producción que proporciona una arquitectura robusta para
+aplicaciones Android e iOS, con gestión de estado moderna, navegación modular y carga perezosa de
+features.
 
 ---
 
@@ -100,6 +102,7 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
 ```
 
 **Características:**
+
 - StateFlow para estado reactivo
 - Channel para acciones
 - Flow para efectos
@@ -120,6 +123,7 @@ interface Feature {
 ```
 
 **Tipos de Features:**
+
 - `Feature`: Feature básico
 - `NavigationFeature`: Con navegación
 - `AsyncFeature`: Inicialización async
@@ -136,6 +140,7 @@ fun LazyFeatureLoader(
 ```
 
 **Beneficios:**
+
 - Reducción del tamaño inicial de la app
 - Inicio más rápido
 - Carga bajo demanda
@@ -153,6 +158,7 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 ```
 
 **Estados:**
+
 - `Loading`: Cargando
 - `Success<T>`: Éxito con datos
 - `Error<E>`: Error con tipo específico
@@ -201,19 +207,23 @@ napoli-kmm-base/
 #### Componentes Core
 
 **1. ViewState** (`presentation/ViewState.kt`)
+
 - Estado base para todas las pantallas
 - Propiedades comunes: topBar, bottomBar, etc.
 - Método `toUiScreenState()` para UI
 
 **2. ViewAction** (`presentation/ViewAction.kt`)
+
 - Clase marcadora para acciones de usuario
 - Patrón sealed class
 
 **3. ViewEffect** (`presentation/ViewEffect.kt`)
+
 - Efectos de un solo uso
 - Navegación, toasts, diálogos
 
 **4. BaseViewModel** (`presentation/viewmodel/BaseViewModel.kt`)
+
 - ViewModel genérico para todas las pantallas
 - Gestión de estado con StateFlow
 - Procesamiento de acciones
@@ -239,15 +249,18 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
 ```
 
 **5. ActionProcessor** (`presentation/action/ActionProcessor.kt`)
+
 - Procesa acciones en mutaciones
 - Método: `process(action, sendEffect): Flow<Mutation<S>>`
 
 **6. StateInterceptor & ActionInterceptor**
+
 - `presentation/state/StateInterceptor.kt`
 - `presentation/action/ActionInterceptor.kt`
 - Logging, analytics, persistencia
 
 **7. ResourceResolver** (`presentation/action/ResourceResolver.kt`)
+
 - Resolución de recursos multiplataforma
 - Acceso a strings fuera de Composables
 
@@ -260,6 +273,7 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
 #### Use Cases
 
 **FlowUseCase** (`domain/usecases/FlowUseCase.kt`)
+
 - Base para todos los use cases
 - Retorna `Flow<UseCaseState<T, E>>`
 - Dispatcher configurable (default: IO)
@@ -282,25 +296,30 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 ```
 
 **UseCaseState** (`domain/usecases/UseCaseState.kt`)
+
 - `Loading`: Cargando
 - `Success<T>`: Éxito
 - `Error<E>`: Error tipado
 
 **ExceptionHandler** (`domain/usecases/ExceptionHandler.kt`)
+
 - Mapeo de excepciones a errores de dominio
 - Logging automático
 
 **ParamsValidator** (`domain/usecases/ParamsValidator.kt`)
+
 - Validación de entrada
 
 #### Modelos de Dominio
 
 **UserAgent** (`domain/models/UserAgent.kt`)
+
 - Información del user agent
 - Pattern Builder
 - Serialización con delimitadores
 
 **ConnectionState & ConnectionType**
+
 - `domain/models/ConnectionState.kt`
 - `domain/models/ConnectionType.kt`
 - Estado de conexión: CONNECTED, DISCONNECTED
@@ -309,6 +328,7 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 #### Providers
 
 **UserAgentProvider**
+
 - `domain/providers/UserAgentProvider.kt` (interface)
 - Implementaciones específicas por plataforma
 - **Android**: Requiere Context, OS, versión, modelo, fabricante
@@ -317,6 +337,7 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 #### Repositorios
 
 **LoggingRepository** (`domain/repositories/LoggingRepository.kt`)
+
 - Interface para logging
 - Implementaciones específicas por plataforma
 
@@ -329,6 +350,7 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 #### Interfaces Core
 
 **Feature** (`feature/Feature.kt`)
+
 - Contrato base para todas las features
 
 ```kotlin
@@ -342,14 +364,17 @@ interface Feature {
 ```
 
 **ConfigurableFeature** (`feature/ConfigurableFeature.kt`)
+
 - Feature con configuración dinámica
 - `configure(config: FeatureConfig)`
 
 **AsyncFeature** (`feature/AsyncFeature.kt`)
+
 - Inicialización asíncrona
 - `suspend fun initializeAsync()`
 
 **NavigationFeature** (`feature/NavigationFeature.kt`)
+
 - Feature con navegación
 
 ```kotlin
@@ -363,39 +388,46 @@ interface NavigationFeature : Feature {
 #### FeatureManager
 
 **FeatureManager** (`feature/FeatureManager.kt`)
+
 - Gestión centralizada del ciclo de vida de features
 
 **Métodos principales:**
 
 **Registro:**
+
 - `register(feature: Feature)`
 - `registerAll(vararg features: Feature)`
 
 **Inyección de Dependencias:**
+
 - `getAllDependencyModules(): List<Module>`
 - `getCriticalDependencyModules(maxPriority: Int): List<Module>`
 - `loadFeatureModules(featureName: String): Boolean`
 - `isFeatureLoaded(featureName: String): Boolean`
 
 **Inicialización:**
+
 - `initializeAll()`
 - `initializeFeature(featureName: String)`
 - `suspend fun initializeAllAsync()`
 - `isFeatureInitialized(featureName: String): Boolean`
 
 **Mapeo de Navegación:**
+
 - `mapRouteToFeature(route: String, featureName: String)`
 - `mapRoutesToFeature(routes: List<String>, featureName: String)`
 - `getFeatureForRoute(route: String): String?`
 - `NavGraphBuilder.registerAllNavigationRoutes()`
 
 **Coordinación:**
+
 - `notifyNavigationReady(navController: NavHostController)`
 - `disposeAll()`
 
 #### Carga Perezosa
 
 **LazyFeatureLoader** (`feature/LazyFeatureLoader.kt`)
+
 - Composable que carga features bajo demanda
 
 ```kotlin
@@ -411,12 +443,14 @@ fun LazyFeatureLoader(
 ```
 
 **LazyNavigation** (`feature/LazyNavigation.kt`)
+
 - Helpers para navegación perezosa
 - `lazyNavigation()`, `lazyComposable()`, `lazyComposableWithLoader()`
 
 #### FeatureBuilder DSL
 
 **FeatureBuilder** (`feature/FeatureBuilder.kt`)
+
 - DSL fluido para crear features
 
 ```kotlin
@@ -446,6 +480,7 @@ User Action → ViewAction → ActionProcessor → Mutation → ViewState → UI
 ```
 
 **Componentes:**
+
 1. **Model** = ViewState (inmutable, single source of truth)
 2. **View** = Composables (observan estado, emiten acciones)
 3. **Intent** = ViewAction (intención del usuario)
@@ -453,6 +488,7 @@ User Action → ViewAction → ActionProcessor → Mutation → ViewState → UI
 ### MVVM (Model-View-ViewModel)
 
 **Implementación:**
+
 - `BaseViewModel<S, A, E>` extiende ViewModel
 - StateFlow para estado
 - Flow para efectos
@@ -461,6 +497,7 @@ User Action → ViewAction → ActionProcessor → Mutation → ViewState → UI
 ### Clean Architecture
 
 **Independencia de capas:**
+
 - **Presentation**: Sin código específico de plataforma
 - **Domain**: Lógica de negocio pura
 - **Data**: Implementaciones de repositorios
@@ -488,9 +525,11 @@ Features cargadas bajo demanda, reducción de tamaño inicial
 ### Componentes Core
 
 **NavigationCommand** (`navigation/NavigationCommand.kt`)
+
 - Interface marcadora para eventos de navegación
 
 **NavigationCoordinator** (`navigation/NavigationCoordinator.kt`)
+
 - Gestión centralizada de navegación
 
 ```kotlin
@@ -505,6 +544,7 @@ interface NavigationCoordinator {
 ```
 
 **NavigationHandler** (`navigation/NavigationHandler.kt`)
+
 - Handler específico por feature
 
 ```kotlin
@@ -596,9 +636,11 @@ fun getModules(): List<Module> = listOf(
 ```
 
 **Core Module:**
+
 - `ResourceResolver` como singleton
 
 **platformModule() - Expect/Actual**
+
 - **Expect** (`di/platformModule.kt`)
 - **Actual Android** (`androidMain/kotlin/.../platformModule.android.kt`)
   ```kotlin
@@ -614,6 +656,7 @@ fun getModules(): List<Module> = listOf(
 ### Uso de DI
 
 **En BaseViewModel:**
+
 ```kotlin
 class MyViewModel(
     private val useCase: MyUseCase,
@@ -622,11 +665,13 @@ class MyViewModel(
 ```
 
 **En Composables:**
+
 ```kotlin
 val viewModel = koinViewModel<MyViewModel>()
 ```
 
 **En Features:**
+
 ```kotlin
 override fun provideDependencies(): List<Module> = listOf(
     myDomainModule,
@@ -670,6 +715,7 @@ val state: StateFlow<S> = actionChannel
 ### Métodos
 
 **Abstractos:**
+
 ```kotlin
 protected abstract fun processAction(
     action: A,
@@ -678,6 +724,7 @@ protected abstract fun processAction(
 ```
 
 **Protegidos:**
+
 ```kotlin
 protected fun sendAction(action: A)
 protected fun sendEffect(effect: E)
@@ -710,6 +757,7 @@ fun MyScreen(viewModel: MyViewModel = koinViewModel()) {
 **Propósito**: Prevenir spam de acciones (500ms entre acciones)
 
 **Bypass**: Marca la acción con `@DoNotThrottle`
+
 ```kotlin
 class UrgentAction : ViewAction, DoNotThrottle
 ```
@@ -727,6 +775,7 @@ class UrgentAction : ViewAction, DoNotThrottle
 **Ubicación**: `base/src/androidMain/`
 
 **DI Module** (`di/platformModule.android.kt`):
+
 ```kotlin
 actual fun platformModule(): Module = module {
     single<UserAgentProvider> {
@@ -738,6 +787,7 @@ actual fun platformModule(): Module = module {
 **UserAgentProvider** (`domain/providers/UserAgentProvider.android.kt`):
 
 **Datos recopilados:**
+
 - OS: "android" o "huawei"
 - Versión de OS: Build.VERSION.RELEASE
 - Modelo: Build.MODEL
@@ -751,6 +801,7 @@ actual fun platformModule(): Module = module {
 **Ubicación**: `base/src/iosMain/`
 
 **DI Module** (`di/platformModule.ios.kt`):
+
 ```kotlin
 actual fun platformModule(): Module = module {
     singleOf(::UserAgentProviderImpl) { bind<UserAgentProvider>() }
@@ -760,6 +811,7 @@ actual fun platformModule(): Module = module {
 **UserAgentProvider** (`domain/providers/UserAgentProvider.ios.kt`):
 
 **Datos recopilados:**
+
 - OS: "ios"
 - Versión: UIDevice.systemVersion
 - Modelo: UIDevice.model
@@ -769,6 +821,7 @@ actual fun platformModule(): Module = module {
 - Versión: CFBundleShortVersionString
 
 **Frameworks:**
+
 - UIKit (UIDevice)
 - Foundation (NSBundle, NSProcessInfo)
 
@@ -783,14 +836,17 @@ actual fun platformModule(): Module = module {
 **File**: `utils/extensions/Flow.kt`
 
 **1. throttle(durationMillis: Long)**
+
 ```kotlin
 fun <T> Flow<T>.throttle(durationMillis: Long): Flow<T>
 ```
+
 - Limita frecuencia de emisión
 - Default: 500ms
 - Bypass con `DoNotThrottle`
 
 **2. collectAsStateWithLifecycle()**
+
 ```kotlin
 @Composable
 fun <T> Flow<T>.collectAsStateWithLifecycle(
@@ -799,10 +855,12 @@ fun <T> Flow<T>.collectAsStateWithLifecycle(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED
 ): State<T>
 ```
+
 - Recolección consciente del ciclo de vida
 - Pausa cuando la app está en background
 
 **3. CollectAsEffectWithLifecycle()**
+
 ```kotlin
 @Composable
 fun <T> Flow<T>.CollectAsEffectWithLifecycle(
@@ -811,6 +869,7 @@ fun <T> Flow<T>.CollectAsEffectWithLifecycle(
     action: suspend (T) -> Unit
 )
 ```
+
 - Para efectos de un solo uso
 - Navegación, toasts, diálogos
 
@@ -819,9 +878,11 @@ fun <T> Flow<T>.CollectAsEffectWithLifecycle(
 **File**: `utils/extensions/NavControllerExtensions.kt`
 
 **viewModelFlow()**
+
 ```kotlin
 fun NavController.viewModelFlow(): Flow<BaseViewModel<*, *, *>>
 ```
+
 - Obtiene el BaseViewModel de la pantalla actual
 - Filtra diálogos
 - Retry en NPE
@@ -1167,17 +1228,17 @@ fun AppNavigation() {
 ```kotlin
 // Kotlin & Coroutines
 kotlin = "2.3.0"
-kotlinx-datetime = "0.6.1"
+kotlinx - datetime = "0.6.1"
 
 // Compose Multiplatform
 compose = "1.10.0"
-compose-navigation = "2.9.1"
+compose - navigation = "2.9.1"
 
 // Android
-androidx-activity-compose = "1.12.2"
-androidx-lifecycle-viewmodel-compose = "2.9.6"
-androidx-lifecycle-runtime-compose = "2.9.6"
-androidx-core-ktx = "1.17.0"
+androidx - activity - compose = "1.12.2"
+androidx - lifecycle - viewmodel - compose = "2.9.6"
+androidx - lifecycle - runtime - compose = "2.9.6"
+androidx - core - ktx = "1.17.0"
 
 // DI
 koin = "4.1.1"
@@ -1187,15 +1248,15 @@ napier = "2.7.1"
 
 // Testing
 junit = "4.13.2"
-androidx-test-ext-junit = "1.2.1"
+androidx - test - ext - junit = "1.2.1"
 ```
 
 ### Build System
 
 ```kotlin
-android-gradle-plugin = "8.13.2"
-kotlin-gradle-plugin = "2.3.0"
-compose-compiler = "2.3.0"
+android - gradle - plugin = "8.13.2"
+kotlin - gradle - plugin = "2.3.0"
+compose - compiler = "2.3.0"
 ```
 
 ---
@@ -1259,7 +1320,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.baldomeronapoli.kmm.base"
+    namespace = "cl.baldomeronapoli.kmm.base"
     compileSdk = 35
 
     defaultConfig {
@@ -1276,6 +1337,7 @@ android {
 ### 3. Inicialización en la App
 
 **Android:**
+
 ```kotlin
 class MyApplication : Application() {
     override fun onCreate() {
@@ -1300,6 +1362,7 @@ class MyApplication : Application() {
 ```
 
 **iOS:**
+
 ```swift
 @main
 struct MyApp: App {
