@@ -20,9 +20,15 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 
     fun execute(params: P): Flow<UseCaseState<T, E>> {
         return flow {
-            emitAll(executeOnBackground(params))
+            try {
+                emitAll(executeOnBackground(params))
+            } catch (e: Exception) {
+                throw e
+            }
         }.flowOn(coroutineDispatcher)
-            .map { data -> UseCaseState.Success<T, E>(data) as UseCaseState<T, E> }
+            .map { data ->
+                UseCaseState.Success<T, E>(data) as UseCaseState<T, E>
+            }
             .onStart {
                 paramsValidator?.validate(params)
                 emit(UseCaseState.Loading())
