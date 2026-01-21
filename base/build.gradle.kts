@@ -46,7 +46,7 @@ kotlin {
             implementation(libs.koin.android)
         }
         commonMain.dependencies {
-            implementation(libs.koin.core)
+            implementation(libs.bundles.koin.common)
 
             implementation(libs.bundles.jetbrains.compose)
 
