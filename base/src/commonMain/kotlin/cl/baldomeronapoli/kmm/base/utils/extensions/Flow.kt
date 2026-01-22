@@ -9,12 +9,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
-import cl.baldomeronapoli.kmm.base.presentation.models.DoNotThrottle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
+
+interface ThrottleExempt
 
 /**
  * Throttles the flow emissions to ensure at least [durationMillis] milliseconds between emissions.
@@ -26,9 +27,7 @@ internal fun <T> Flow<T>.throttle(durationMillis: Long): Flow<T> = flow {
     var lastEmissionTime = 0L
 
     collect { value ->
-        val kClass = value?.let { it::class }
-
-        if (kClass != null && kClass is DoNotThrottle) {
+        if (value is ThrottleExempt) {
             emit(value)
         } else {
             val currentTime = Clock.System.now().toEpochMilliseconds()
