@@ -1,12 +1,12 @@
-package cl.baldomeronapoli.kmm.base.domain.providers
+package cl.baldomeronapoli.kmm.base.data.datasource.device
 
 import cl.baldomeronapoli.kmm.base.domain.models.UserAgent
 
 /**
- * Multiplatform provider for UserAgent information.
+ * Multiplatform data source for UserAgent information.
  * Implementations are platform-specific (Android/iOS).
  */
-interface UserAgentProvider {
+interface UserAgentDataSource {
     /**
      * Provides platform-specific UserAgent information including:
      * - OS and OS version

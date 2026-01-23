@@ -1,4 +1,4 @@
-package cl.baldomeronapoli.kmm.base.domain.providers
+package cl.baldomeronapoli.kmm.base.data.datasource.device
 
 import cl.baldomeronapoli.kmm.base.domain.models.UserAgent
 import platform.Foundation.NSBundle
@@ -22,7 +22,7 @@ private const val TABLET = "tablet"
 private const val EMULATOR = "emulator"
 private const val SMART_PHONE = "smartphone"
 
-class UserAgentProviderImpl : UserAgentProvider {
+class UserAgentDataSourceImpl : UserAgentDataSource {
 
     private val osVersion: String
         get() = UIDevice.currentDevice.systemVersion

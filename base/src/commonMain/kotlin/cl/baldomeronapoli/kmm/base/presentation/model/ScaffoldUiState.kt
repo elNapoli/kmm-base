@@ -1,4 +1,4 @@
-package cl.baldomeronapoli.kmm.base.presentation.models
+package cl.baldomeronapoli.kmm.base.presentation.model
 
 data class ScaffoldUiState(
     val topBarTitle: String,

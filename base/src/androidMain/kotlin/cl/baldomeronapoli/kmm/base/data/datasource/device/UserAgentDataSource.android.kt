@@ -1,4 +1,4 @@
-package cl.baldomeronapoli.kmm.base.domain.providers
+package cl.baldomeronapoli.kmm.base.data.datasource.device
 
 import android.content.Context
 import android.os.Build
@@ -23,8 +23,7 @@ private const val TABLET = "tablet"
 private const val EMULATOR = "emulator"
 private const val SMART_PHONE = "smartphone"
 
-class UserAgentProviderImpl(private val context: Context) :
-    cl.baldomeronapoli.kmm.base.domain.providers.UserAgentProvider {
+class UserAgentDataSourceImpl(private val context: Context) : UserAgentDataSource {
 
     private val osVersion = Build.VERSION.RELEASE ?: UNDEFINED
     private val model = Build.MODEL ?: UNDEFINED

@@ -1,6 +1,6 @@
 package cl.baldomeronapoli.kmm.base.presentation
 
-import cl.baldomeronapoli.kmm.base.presentation.models.ScaffoldUiState
+import cl.baldomeronapoli.kmm.base.presentation.model.ScaffoldUiState
 
 abstract class ViewState(
     open val topBarTitle: String = "",

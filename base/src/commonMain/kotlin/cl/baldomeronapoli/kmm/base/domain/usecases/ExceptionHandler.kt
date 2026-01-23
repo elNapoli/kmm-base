@@ -1,6 +1,6 @@
 package cl.baldomeronapoli.kmm.base.domain.usecases
 
-import cl.baldomeronapoli.kmm.base.domain.repositories.LoggingRepository
+import cl.baldomeronapoli.kmm.base.domain.repository.LoggingRepository
 
 abstract class ExceptionHandler<E : UseCaseError> {
     protected abstract val loggingRepository: LoggingRepository
