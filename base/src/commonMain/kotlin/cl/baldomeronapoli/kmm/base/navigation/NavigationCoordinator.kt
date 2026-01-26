@@ -14,11 +14,6 @@ interface NavigationCoordinator {
     fun setNavController(navController: NavHostController)
 
     /**
-     * Obtiene el NavController a usar.
-     */
-    fun getNavController(): NavHostController
-
-    /**
      * Registra un handler de navegación.
      */
     fun registerHandler(handler: NavigationHandler)
