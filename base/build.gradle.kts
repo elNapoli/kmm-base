@@ -42,7 +42,6 @@ kotlin {
 
     sourceSets {
         androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
         }
         commonMain.dependencies {
@@ -50,7 +49,6 @@ kotlin {
 
             implementation(libs.bundles.jetbrains.compose)
 
-            implementation(libs.components.resources)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.datetime)
@@ -89,16 +87,6 @@ android {
         singleVariant("release") {
             withSourcesJar()
         }
-    }
-}
-
-// Fix para dependencias de tareas de sourceJar
-tasks.configureEach {
-    if (name == "sourceReleaseJar") {
-        dependsOn(
-            "generateResourceAccessorsForAndroidMain",
-            "generateActualResourceCollectorsForAndroidMain"
-        )
     }
 }
 
