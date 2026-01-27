@@ -8,7 +8,6 @@ import cl.baldomeronapoli.kmm.base.presentation.ViewEffect
 import cl.baldomeronapoli.kmm.base.presentation.ViewState
 import cl.baldomeronapoli.kmm.base.presentation.action.ActionInterceptor
 import cl.baldomeronapoli.kmm.base.presentation.state.StateInterceptor
-import cl.baldomeronapoli.kmm.base.utils.extensions.throttle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +40,7 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
         .onStart {
             if (initialAction != null) emit(initialAction)
         }
-        .throttle(durationMillis = 500)
+        //.throttle(durationMillis = 500)
         .onEach { action ->
             viewModelScope.launch {
                 actionInterceptor?.onIntercept(action)

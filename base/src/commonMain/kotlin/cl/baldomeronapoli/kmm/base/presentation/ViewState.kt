@@ -1,6 +1,7 @@
 package cl.baldomeronapoli.kmm.base.presentation
 
 import cl.baldomeronapoli.kmm.base.presentation.model.ScaffoldUiState
+import cl.baldomeronapoli.kmm.base.presentation.model.UserMessage
 
 abstract class ViewState(
     open val topBarTitle: String = "",
@@ -8,6 +9,7 @@ abstract class ViewState(
     open val showTopBar: Boolean = false,
     open val showBottomBar: Boolean = false,
     open val showDivider: Boolean = false,
+    open val userMessage: UserMessage? = null,
 ) {
     /**
      * Extrae solo las propiedades UI necesarias para el MainScreen.
