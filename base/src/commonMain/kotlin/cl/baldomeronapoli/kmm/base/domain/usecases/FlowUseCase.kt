@@ -11,14 +11,14 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
-abstract class FlowUseCase<P, T, E : UseCaseError>(
+abstract class FlowUseCase<PARAM, RESULT, ERROR : UseCaseError>(
     protected open val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    protected open val paramsValidator: ParamsValidator<P>? = null
-    protected open val exceptionHandler: ExceptionHandler<E>? = null
-    abstract suspend fun executeOnBackground(params: P): Flow<T>
+    protected open val paramsValidator: ParamsValidator<PARAM>? = null
+    protected open val exceptionHandler: ExceptionHandler<ERROR>? = null
+    abstract suspend fun executeOnBackground(params: PARAM): Flow<RESULT>
 
-    fun execute(params: P): Flow<UseCaseState<T, E>> {
+    fun execute(params: PARAM): Flow<UseCaseState<RESULT, ERROR>> {
         return flow {
             try {
                 emitAll(executeOnBackground(params))
@@ -27,7 +27,7 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
             }
         }.flowOn(coroutineDispatcher)
             .map { data ->
-                UseCaseState.Success<T, E>(data) as UseCaseState<T, E>
+                UseCaseState.Success<RESULT, ERROR>(data) as UseCaseState<RESULT, ERROR>
             }
             .onStart {
                 paramsValidator?.validate(params)
