@@ -9,14 +9,15 @@ componentsResources = "1.10.0"
 composeMultiplatform = "1.10.0"
 foundation = "1.10.0"
 kotlin = "2.3.0"
-kotlinx-datetime = "0.6.1"
+kotlinx-datetime = "0.7.1"
 material3 = "1.9.0"
-napier = "2.7.1"
 navigationCompose = "2.9.1"
 runtime = "1.10.0"
 uiToolingPreview = "1.10.0"
 koin = "4.1.1"
+napoli-logger = "1.0.0"
 [libraries]
+napoli-kmm-logger = { module = "cl.baldomeronapoli.kmm:logger", version.ref = "napoli-logger" }
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "componentsResources" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -32,7 +33,6 @@ koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 
 [plugins]
 androidLibrary = { id = "com.android.library", version.ref = "agp" }

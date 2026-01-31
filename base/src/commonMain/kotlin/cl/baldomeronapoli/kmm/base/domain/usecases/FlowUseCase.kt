@@ -34,7 +34,7 @@ abstract class FlowUseCase<PARAM, RESULT, ERROR : UseCaseError>(
                 emit(UseCaseState.Loading())
             }
             .catch { throwable ->
-                val error = exceptionHandler?.loggingException(throwable)
+                val error = exceptionHandler?.crash(throwable)
                 emit(UseCaseState.Error(error))
             }
     }

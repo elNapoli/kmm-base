@@ -11,7 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import io.github.aakira.napier.Napier
+import cl.baldomeronapoli.kmm.logger.Trace
 import org.koin.mp.KoinPlatformTools
 
 /**
@@ -57,30 +57,30 @@ fun LazyFeatureLoader(
         try {
             // Verificar si ya está cargado
             if (featureManager.isFeatureLoaded(featureName)) {
-                Napier.d("Feature '$featureName' already loaded")
+                Trace.d("Feature '$featureName' already loaded")
                 loadState = LoadState.Loaded
                 onLoadComplete?.invoke()
                 return@LaunchedEffect
             }
 
-            Napier.d("LazyFeatureLoader: Loading feature: $featureName")
+            Trace.d("LazyFeatureLoader: Loading feature: $featureName")
 
             // Cargar módulos de Koin del feature
             val modulesLoaded = featureManager.loadFeatureModules(featureName)
 
             if (modulesLoaded) {
-                Napier.d("LazyFeatureLoader: Modules loaded for feature: $featureName")
+                Trace.d("LazyFeatureLoader: Modules loaded for feature: $featureName")
             }
 
             // Inicializar el feature (sin Context, usa DI en su lugar)
             featureManager.initializeFeature(featureName)
 
-            Napier.d("LazyFeatureLoader: Feature '$featureName' loaded successfully")
+            Trace.d("LazyFeatureLoader: Feature '$featureName' loaded successfully")
             loadState = LoadState.Loaded
             onLoadComplete?.invoke()
 
         } catch (e: Exception) {
-            Napier.d("LazyFeatureLoader: Error loading feature '$featureName': ${e.message}")
+            Trace.d("LazyFeatureLoader: Error loading feature '$featureName': ${e.message}")
             e.printStackTrace()
             loadState = LoadState.Error(e)
             onLoadError?.invoke(e)
@@ -101,7 +101,7 @@ fun LazyFeatureLoader(
         is LoadState.Error -> {
             // En caso de error, mostrar el contenido de todas formas
             // (los módulos críticos ya deberían estar cargados)
-            Napier.d("LazyFeatureLoader WARNING: Showing content despite error for feature: $featureName")
+            Trace.d("LazyFeatureLoader WARNING: Showing content despite error for feature: $featureName")
             content()
         }
     }

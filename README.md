@@ -915,11 +915,11 @@ val authFeature = feature("auth") {
     }
 
     initialize {
-        Napier.d("Auth feature initialized")
+        Trace.d("Auth feature initialized")
     }
 
     dispose {
-        Napier.d("Auth feature disposed")
+        Trace.d("Auth feature disposed")
     }
 }
 
@@ -1026,7 +1026,7 @@ class LoginViewModel(
     // Interceptores opcionales
     override val stateInterceptor = object : StateInterceptor<LoginState> {
         override suspend fun onIntercept(state: LoginState) {
-            Napier.d("New state: $state")
+            Trace.d("New state: $state")
         }
     }
 
@@ -1244,7 +1244,7 @@ androidx - core - ktx = "1.17.0"
 koin = "4.1.1"
 
 // Logging
-napier = "2.7.1"
+Trace = "2.7.1"
 
 // Testing
 junit = "4.13.2"
@@ -1309,7 +1309,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.napier)
+            implementation(libs.Trace)
         }
 
         androidMain.dependencies {

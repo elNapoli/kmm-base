@@ -2,7 +2,7 @@ package cl.baldomeronapoli.kmm.base.feature
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import io.github.aakira.napier.Napier
+import cl.baldomeronapoli.kmm.logger.Trace
 import org.koin.core.context.loadKoinModules
 import org.koin.core.module.Module
 
@@ -83,7 +83,7 @@ class FeatureManager {
      */
     fun loadFeatureModules(featureName: String): Boolean {
         if (featureName in loadedModules) {
-            Napier.d("Feature '$featureName' modules already loaded")
+            Trace.d(TAG, "Feature '$featureName' modules already loaded")
 
             return false  // Ya estaba cargado
         }
@@ -92,11 +92,11 @@ class FeatureManager {
             ?: throw IllegalStateException("Feature '$featureName' not registered")
 
         return try {
-            Napier.d("Loading modules for feature: $featureName")
+            Trace.d(TAG, "Loading modules for feature: $featureName")
 
             val modules = feature.provideDependencies()
             if (modules.isEmpty()) {
-                Napier.d("Feature '$featureName' has no modules to load")
+                Trace.d(TAG, "Feature '$featureName' has no modules to load")
                 loadedModules.add(featureName)
                 return false
             }
@@ -105,10 +105,10 @@ class FeatureManager {
             loadKoinModules(modules)
 
             loadedModules.add(featureName)
-            Napier.d("Feature '$featureName' modules loaded successfully (${modules.size} modules)")
+            Trace.d("Feature '$featureName' modules loaded successfully (${modules.size} modules)")
             true
         } catch (e: Exception) {
-            Napier.e("Error loading modules for feature '$featureName'")
+            Trace.e("Error loading modules for feature '$featureName'")
             throw e
         }
     }
@@ -181,7 +181,7 @@ class FeatureManager {
      */
     fun mapRouteToFeature(route: String, featureName: String) {
         routeToFeatureMap[route] = featureName
-        Napier.d("Mapped route '$route' to feature '$featureName'")
+        Trace.d("Mapped route '$route' to feature '$featureName'")
     }
 
     /**
