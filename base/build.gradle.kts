@@ -53,7 +53,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.datetime)
             implementation(libs.components.resources)
-            api(libs.napoli.kmm.logger)
+            implementation(libs.napoli.kmm.logger)
 
 
         }
