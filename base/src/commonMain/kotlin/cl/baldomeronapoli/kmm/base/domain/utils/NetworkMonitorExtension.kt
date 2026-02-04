@@ -1,6 +1,6 @@
-package cl.baldomeronapoli.kmm.base.domain.repository.strategy
+package cl.baldomeronapoli.kmm.base.domain.utils
 
-import cl.baldomeronapoli.kmm.base.domain.repository.BaseRepository
+import cl.baldomeronapoli.kmm.base.domain.models.NetworkMonitor
 import cl.baldomeronapoli.kmm.logger.Trace
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -21,12 +21,11 @@ data class FetchConfig(
  *
  * Attempts to fetch data from local storage first.
  * If local storage is empty, fetches from remote and saves to local.
- * Integrates with SyncManager when offline (if enableSync = true).
  *
  * Flow:
  * 1. Try local storage
  * 2. If empty → fetch remote → save local → return local
- * 3. If offline & enableSync → queue operation via SyncManager
+ * 3. If offline & enableSync → log and return empty
  *
  * @param Remote Remote data model type
  * @param Entity Database entity type
@@ -41,7 +40,7 @@ data class FetchConfig(
  *
  * @return List of domain models
  */
-suspend fun <Remote, Entity, Domain> BaseRepository.fetchFirstLocal(
+suspend fun <Remote, Entity, Domain> NetworkMonitor.fetchFirstLocal(
     fetchLocal: suspend () -> List<Entity>,
     fetchRemote: suspend () -> List<Remote>,
     saveLocal: suspend (List<Entity>) -> Unit,
@@ -51,10 +50,7 @@ suspend fun <Remote, Entity, Domain> BaseRepository.fetchFirstLocal(
 ): List<Domain> {
     val entityName = config.entityType.ifEmpty { "Entity" }
 
-    Trace.d("[$entityName] FIRST_LOCAL strategy started")
-
     // Step 1: Try local first
-    Trace.d("[$entityName] Searching in LOCAL storage...")
     val localData = fetchLocal()
 
     if (localData.isNotEmpty()) {
@@ -63,35 +59,21 @@ suspend fun <Remote, Entity, Domain> BaseRepository.fetchFirstLocal(
     }
 
     // Step 2: Local is empty, check network
-    Trace.d("[$entityName] LOCAL storage is EMPTY")
 
-    if (!isNetworkAvailable()) {
-        Trace.d("[$entityName] No internet connection available")
-        if (config.enableSync && syncManager != null) {
-            Trace.d("[$entityName] Sync ENABLED - operation will sync when online")
-            // In a real scenario, you might want to queue a sync operation here
-            // For now, return empty as data will sync when online
-        } else {
-            Trace.d("⏸[$entityName] Sync DISABLED - returning empty list")
-        }
+    if (!this.isConnected()) {
         return emptyList()
     }
 
-    // Step 3: Fetch from remote and save
-    Trace.d("[$entityName] Internet available - fetching from REMOTE...")
 
     val remoteData = fetchRemote()
     Trace.d("[$entityName] Received ${remoteData.size} items from REMOTE")
 
     val entities = remoteData.map(mapRemoteToEntity)
 
-    Trace.d("[$entityName] Saving ${entities.size} items to LOCAL cache...")
     saveLocal(entities)
-    Trace.d("[$entityName] Successfully cached in LOCAL storage")
 
     // Return from local to ensure consistency
     val result = fetchLocal().map(mapEntityToDomain)
-    Trace.d("[$entityName] FIRST_LOCAL completed: ${result.size} items returned")
     return result
 
 }
@@ -120,7 +102,7 @@ suspend fun <Remote, Entity, Domain> BaseRepository.fetchFirstLocal(
  *
  * @return List of domain models
  */
-suspend fun <Remote, Entity, Domain> BaseRepository.fetchFirstRemoteSaveLocal(
+suspend fun <Remote, Entity, Domain> NetworkMonitor.fetchFirstRemoteSaveLocal(
     fetchRemote: suspend () -> List<Remote>,
     fetchLocal: suspend () -> List<Entity>,
     saveLocal: suspend (List<Entity>) -> Unit,
@@ -130,25 +112,18 @@ suspend fun <Remote, Entity, Domain> BaseRepository.fetchFirstRemoteSaveLocal(
 ): List<Domain> {
     val entityName = config.entityType.ifEmpty { "Entity" }
 
-    Trace.d("🔍 [$entityName] FIRST_REMOTE_SAVE_LOCAL strategy started")
 
-    if (!isNetworkAvailable()) {
-        Trace.d("[$entityName] No internet connection - FALLBACK to LOCAL cache")
+    if (!this.isConnected()) {
         val localData = fetchLocal()
         Trace.d("[$entityName] Retrieved ${localData.size} items from LOCAL fallback")
         return localData.map(mapEntityToDomain)
     }
 
-    Trace.d("[$entityName] Internet available - fetching from REMOTE (always fresh)...")
     val remoteData = fetchRemote()
-    Trace.d("[$entityName] Received ${remoteData.size} items from REMOTE")
 
     val entities = remoteData.map(mapRemoteToEntity)
 
-    Trace.d("[$entityName] Updating LOCAL cache with fresh data...")
     saveLocal(entities)
-    Trace.d("[$entityName] LOCAL cache updated successfully")
-
     // Return from local to ensure consistency with saved data
     val result = fetchLocal().map(mapEntityToDomain)
     Trace.d("[$entityName] FIRST_REMOTE_SAVE_LOCAL completed: ${result.size} items returned")
@@ -175,27 +150,20 @@ suspend fun <Remote, Entity, Domain> BaseRepository.fetchFirstRemoteSaveLocal(
  *
  * @return List of domain models
  */
-suspend fun <Remote, Domain> BaseRepository.fetchFirstRemoteNoSave(
+suspend fun <Remote, Domain> NetworkMonitor.fetchFirstRemoteNoSave(
     fetchRemote: suspend () -> List<Remote>,
     mapRemoteToDomain: (Remote) -> Domain,
     config: FetchConfig = FetchConfig()
 ): List<Domain> {
     val entityName = config.entityType.ifEmpty { "Entity" }
 
-    Trace.d("[$entityName] FIRST_REMOTE_NO_SAVE strategy started (no cache)")
-
-    if (!isNetworkAvailable()) {
-        Trace.d("[$entityName] No internet connection available")
-        Trace.d("[$entityName] No LOCAL cache for this strategy - returning empty")
+    if (!this.isConnected()) {
         return emptyList()
     }
-
-    Trace.d("[$entityName] Fetching from REMOTE (temporary data, won't be cached)...")
     val remoteData = fetchRemote()
     Trace.d("[$entityName] Received ${remoteData.size} temporary items from REMOTE")
 
     val result = remoteData.map(mapRemoteToDomain)
-    Trace.d("[$entityName] FIRST_REMOTE_NO_SAVE completed: ${result.size} items returned")
     return result
 }
 
@@ -218,7 +186,7 @@ suspend fun <Remote, Domain> BaseRepository.fetchFirstRemoteNoSave(
  * @param mapRemoteToEntity Lambda to map remote model to entity
  * @param config Fetch configuration
  */
-suspend fun <Remote, Entity> BaseRepository.syncRemoteToLocal(
+suspend fun <Remote, Entity> NetworkMonitor.pullRemoteToLocal(
     fetchRemote: suspend () -> List<Remote>,
     saveLocal: suspend (List<Entity>) -> Unit,
     mapRemoteToEntity: (Remote) -> Entity,
@@ -226,24 +194,72 @@ suspend fun <Remote, Entity> BaseRepository.syncRemoteToLocal(
 ) {
     val entityName = config.entityType.ifEmpty { "Entity" }
 
-    Trace.d("[$entityName] SYNC_REMOTE_TO_LOCAL started (no return)")
-
-    if (!isNetworkAvailable()) {
-        Trace.d("[$entityName] No internet - sync skipped")
+    if (!this.isConnected()) {
         return
     }
 
-    Trace.d("[$entityName] Fetching from REMOTE for sync...")
-
     val remoteData = fetchRemote()
     Trace.d("[$entityName] Received ${remoteData.size} items from REMOTE")
-
     val entities = remoteData.map(mapRemoteToEntity)
-
-    Trace.d("[$entityName] Saving ${entities.size} items to LOCAL...")
     saveLocal(entities)
-    Trace.d("[$entityName] SYNC completed successfully - ${entities.size} items cached")
 
+}
+
+/**
+ * Strategy: Save Local Then Remote
+ *
+ * Saves data to local storage first (marks as dirty), then attempts to sync to remote.
+ * If remote sync fails, data remains marked as dirty for later sync.
+ *
+ * Flow:
+ * 1. Save to local storage (with dirty flag)
+ * 2. If online → sync to remote → clear dirty flag
+ * 3. If offline or sync fails → keep dirty flag for later retry
+ * 4. Return updated local data
+ *
+ * @param Entity Database entity type
+ * @param Domain Domain model type
+ *
+ * @param saveLocalDirty Lambda to save data to local storage and mark as dirty
+ * @param syncToRemote Lambda to sync data to remote source
+ * @param clearDirtyFlag Lambda to clear dirty flag after successful sync
+ * @param fetchLocal Lambda to fetch updated data from local storage
+ * @param mapEntityToDomain Lambda to map entity to domain model
+ * @param config Fetch configuration with sync settings
+ *
+ * @return Domain model after save (may be dirty if sync failed)
+ */
+suspend fun <Entity, Domain> NetworkMonitor.saveLocalThenRemote(
+    saveLocalDirty: suspend () -> Entity,
+    syncToRemote: suspend () -> Unit,
+    clearDirtyFlag: suspend () -> Unit,
+    fetchLocal: suspend () -> Entity?,
+    mapEntityToDomain: (Entity) -> Domain,
+    config: FetchConfig = FetchConfig()
+): Domain {
+    val entityName = config.entityType.ifEmpty { "Entity" }
+
+    // Step 1: Always save to local first (marks as dirty)
+    val savedEntity = saveLocalDirty()
+    Trace.d("[$entityName] Saved to LOCAL storage (marked as dirty)")
+
+    // Step 2: Try to sync to remote if online
+    if (this.isConnected()) {
+        try {
+            syncToRemote()
+            clearDirtyFlag()
+            Trace.d("[$entityName] Synced to REMOTE and cleared dirty flag")
+        } catch (e: Exception) {
+            Trace.e("[$entityName] Failed to sync to REMOTE - will retry later", e)
+            // Data remains dirty, will be synced later
+        }
+    } else {
+        Trace.d("[$entityName] OFFLINE - data will sync when online")
+    }
+
+    // Step 3: Return updated local data
+    val result = fetchLocal() ?: savedEntity
+    return mapEntityToDomain(result)
 }
 
 /**
@@ -259,7 +275,7 @@ suspend fun <Remote, Entity> BaseRepository.syncRemoteToLocal(
  *
  * @return Flow emitting lists of domain models
  */
-fun <Remote, Entity, Domain> BaseRepository.observeFirstLocal(
+fun <Remote, Entity, Domain> NetworkMonitor.observeFirstLocal(
     observeLocal: () -> Flow<List<Entity>>,
     fetchRemote: suspend () -> List<Remote>,
     saveLocal: suspend (List<Entity>) -> Unit,
@@ -268,31 +284,21 @@ fun <Remote, Entity, Domain> BaseRepository.observeFirstLocal(
     config: FetchConfig = FetchConfig()
 ): Flow<List<Domain>> = flow {
     val entityName = config.entityType.ifEmpty { "Entity" }
-
-    Trace.d("[$entityName] OBSERVE_FIRST_LOCAL strategy started (reactive)")
-
     // Observe local data
     observeLocal().collect { localData ->
         Trace.d("[$entityName] LOCAL storage emitted ${localData.size} items")
-
         // Emit current local data
         emit(localData.map(mapEntityToDomain))
 
         // If local is empty and we have network, fetch remote
         if (localData.isEmpty()) {
-            Trace.d("[$entityName] LOCAL storage is EMPTY - checking network...")
-            if (isNetworkAvailable()) {
-                Trace.d("[$entityName] Internet available - fetching from REMOTE...")
+            if (this@observeFirstLocal.isConnected()) {
                 val remoteData = fetchRemote()
                 Trace.d("[$entityName] Received ${remoteData.size} items from REMOTE")
 
                 val entities = remoteData.map(mapRemoteToEntity)
-                Trace.d("[$entityName] Saving to LOCAL cache...")
                 saveLocal(entities)
-                Trace.d("[$entityName] Successfully cached - LOCAL will emit new data")
 
-            } else {
-                Trace.d("[$entityName] No internet - waiting for data or connection")
             }
         }
     }

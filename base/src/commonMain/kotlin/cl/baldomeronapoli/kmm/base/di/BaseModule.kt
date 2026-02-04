@@ -1,6 +1,11 @@
 package cl.baldomeronapoli.kmm.base.di
 
+import cl.baldomeronapoli.kmm.base.data.repository.AutoSyncOrchestrator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 
@@ -14,6 +19,18 @@ object BaseModule {
     }
 
     private fun commonModule() = module {
+        // Application-level CoroutineScope with qualifier for global use
+        single(named("applicationScope")) {
+            CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        }
 
+        // AutoSyncOrchestrator uses the applicationScope
+        single(createdAtStart = true) {
+            AutoSyncOrchestrator(
+                networkMonitor = get(),
+                syncableRepositories = getAll(),
+                coroutineScope = get(named("applicationScope"))
+            )
+        }
     }
 }

@@ -6,7 +6,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import cl.baldomeronapoli.enracha.core.domain.utils.NetworkMonitor
+import cl.baldomeronapoli.kmm.base.domain.models.NetworkMonitor
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

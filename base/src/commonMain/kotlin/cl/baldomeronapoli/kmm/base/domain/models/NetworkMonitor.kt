@@ -1,4 +1,4 @@
-package cl.baldomeronapoli.enracha.core.domain.utils
+package cl.baldomeronapoli.kmm.base.domain.models
 
 import kotlinx.coroutines.flow.Flow
 

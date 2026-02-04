@@ -1,5 +1,6 @@
 package cl.baldomeronapoli.kmm.base.domain.usecases
 
+import cl.baldomeronapoli.kmm.logger.Trace
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -34,6 +35,7 @@ abstract class FlowUseCase<PARAM, RESULT, ERROR : UseCaseError>(
                 emit(UseCaseState.Loading())
             }
             .catch { throwable ->
+                Trace.e("Error in FlowUseCase", throwable)
                 val error = exceptionHandler?.crash(throwable)
                 emit(UseCaseState.Error(error))
             }
