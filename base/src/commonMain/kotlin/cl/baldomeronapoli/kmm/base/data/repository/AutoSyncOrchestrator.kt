@@ -52,6 +52,7 @@ class AutoSyncOrchestrator(
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
 
     private var wasOffline = false
+    private var isFirstEmission = true
 
     init {
         Trace.d("AutoSyncOrchestrator initialized with ${syncableRepositories.size} repositories")
@@ -62,7 +63,9 @@ class AutoSyncOrchestrator(
     }
 
     /**
-     * Observes network connectivity changes and triggers sync on reconnection
+     * Observes network connectivity changes and triggers sync on reconnection.
+     * Also triggers sync on app startup if online and there are pending dirty records
+     * (covers the case: user closes app offline, reopens with internet).
      */
     private fun observeNetworkChanges() {
         coroutineScope.launch {
@@ -74,8 +77,16 @@ class AutoSyncOrchestrator(
                     if (isConnected && wasOffline) {
                         Trace.d("Network restored! Triggering auto-sync...")
                         triggerSync()
+                    } else if (isConnected && isFirstEmission) {
+                        // App started online — check if there are pending dirty records
+                        val pendingCount = getTotalPendingCount()
+                        if (pendingCount > 0) {
+                            Trace.d("App started online with $pendingCount pending records. Triggering sync...")
+                            triggerSync()
+                        }
                     }
 
+                    isFirstEmission = false
                     wasOffline = !isConnected
                 }
         }

@@ -6,5 +6,6 @@ data class UserMessage(
     val actionLabel: UiText? = null,
     val type: MessageType,
     val isSnackBar: Boolean = false,
-    val onActionClick: (() -> Unit)? = null
+    val onActionClick: (() -> Unit)? = null,
+    val showDismissIcon: Boolean = false
 )
