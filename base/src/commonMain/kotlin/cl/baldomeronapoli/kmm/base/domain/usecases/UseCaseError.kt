@@ -1,3 +1,8 @@
 package cl.baldomeronapoli.kmm.base.domain.usecases
 
-interface UseCaseError
+import org.jetbrains.compose.resources.StringResource
+
+interface UseCaseError {
+    val title: StringResource
+    val message: StringResource
+}

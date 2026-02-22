@@ -235,29 +235,28 @@ suspend fun <Entity, Domain> NetworkMonitor.saveLocalThenRemote(
     clearDirtyFlag: suspend () -> Unit,
     fetchLocal: suspend () -> Entity?,
     mapEntityToDomain: (Entity) -> Domain,
-    config: FetchConfig = FetchConfig()
+    config: FetchConfig = FetchConfig(),
+    onNonRetriableError: suspend (Entity, Exception) -> Unit = { _, _ -> }
 ): Domain {
     val entityName = config.entityType.ifEmpty { "Entity" }
 
-    // Step 1: Always save to local first (marks as dirty)
     val savedEntity = saveLocalDirty()
     Trace.d("[$entityName] Saved to LOCAL storage (marked as dirty)")
 
-    // Step 2: Try to sync to remote if online
     if (this.isConnected()) {
         try {
             syncToRemote()
             clearDirtyFlag()
             Trace.d("[$entityName] Synced to REMOTE and cleared dirty flag")
         } catch (e: Exception) {
-            Trace.e("[$entityName] Failed to sync to REMOTE - will retry later", e)
-            // Data remains dirty, will be synced later
+            Trace.e("[$entityName] Non-retriable REMOTE error - rolling back local", e)
+            onNonRetriableError(savedEntity, e)
+            throw e  // propaga al UseCase
         }
     } else {
         Trace.d("[$entityName] OFFLINE - data will sync when online")
     }
 
-    // Step 3: Return updated local data
     val result = fetchLocal() ?: savedEntity
     return mapEntityToDomain(result)
 }
