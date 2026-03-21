@@ -29,4 +29,4 @@ dependencyResolutionManagement {
     }
 }
 
-include(":base")
+include(":base-kmp")

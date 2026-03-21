@@ -17,7 +17,7 @@ uiToolingPreview = "1.10.0"
 koin = "4.1.1"
 napoli-logger = "1.0.0"
 [libraries]
-napoli-kmm-logger = { module = "cl.baldomeronapoli.kmm:logger", version.ref = "napoli-logger" }
+napoli-logger-kmp = { module = "cl.baldomeronapoli:logger-kmp", version.ref = "napoli-logger" }
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "componentsResources" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
