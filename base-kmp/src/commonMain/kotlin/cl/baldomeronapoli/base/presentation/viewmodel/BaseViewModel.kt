@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -69,11 +70,13 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
         sendEffect: (E) -> Unit
     ): Flow<Mutation<S>>
 
-    protected fun sendAction(action: A) {
+    fun sendAction(action: A) {
         viewModelScope.launch {
             actionChannel.send(action)
         }
     }
+
+    protected fun <S> noMutation(): Flow<Mutation<S>> = flowOf { it }
 
     protected fun sendEffect(effect: E) {
         viewModelScope.launch {
