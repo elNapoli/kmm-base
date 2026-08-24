@@ -10,6 +10,7 @@ features.
 
 ## Tabla de Contenidos
 
+- [Instalación](#instalación)
 - [Descripción General](#descripción-general)
 - [Arquitectura](#arquitectura)
 - [Características Principales](#características-principales)
@@ -25,6 +26,102 @@ features.
 - [Ejemplos de Uso](#ejemplos-de-uso)
 - [Dependencias](#dependencias)
 - [Configuración](#configuración)
+
+---
+
+## Instalación
+
+Esta librería se publica en **GitHub Packages** (repositorio privado). Para consumirla necesitas
+un **Personal Access Token (PAT)** de GitHub con el scope `read:packages`.
+
+### 1. Generar un token
+
+1. Ve a [GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)](https://github.com/settings/tokens)
+2. Genera un token con el scope **`read:packages`**
+3. Guárdalo en algún lugar seguro (no lo subas al repo)
+
+### 2. Configurar credenciales
+
+Crea/edita `local.properties` en la raíz de tu proyecto (este archivo ya está en `.gitignore`, no se sube a git):
+
+```properties
+gpr.user=TU_USUARIO_GITHUB
+gpr.token=TU_TOKEN_GENERADO
+```
+
+Alternativamente puedes usar variables de entorno `GITHUB_ACTOR` y `GITHUB_TOKEN` (útil en CI).
+
+### 3. Agregar el repositorio en `settings.gradle.kts`
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        // ... tus otros repos (google, mavenCentral, etc.)
+
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/elNapoli/kmm-base")
+            credentials {
+                val localProperties = java.util.Properties().apply {
+                    val file = File(rootDir, "local.properties")
+                    if (file.exists()) load(file.inputStream())
+                }
+                username = localProperties.getProperty("gpr.user")
+                    ?: System.getenv("GITHUB_ACTOR")
+                password = localProperties.getProperty("gpr.token")
+                    ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+```
+
+### 4. Agregar la dependencia
+
+En el `libs.versions.toml` de tu proyecto:
+
+```toml
+[versions]
+napoli-kmm-base = "1.0.0" # usa el último tag publicado del repo
+
+[libraries]
+napoli-kmm-base = { module = "cl.baldomeronapoli:base-kmp", version.ref = "napoli-kmm-base" }
+```
+
+Y en el `build.gradle.kts` de tu módulo (`commonMain` si es KMP, o directo en `dependencies` si es solo Android):
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.napoli.kmm.base)
+        }
+    }
+}
+```
+
+O sin version catalog:
+
+```kotlin
+dependencies {
+    implementation("cl.baldomeronapoli:base-kmp:1.0.0")
+}
+```
+
+> Revisa los [tags del repositorio](https://github.com/elNapoli/kmm-base/tags) para saber cuál es
+> la última versión publicada.
+
+### 5. Sincronizar
+
+```bash
+./gradlew build --refresh-dependencies
+```
+
+Si ves un error `401 Unauthorized` o `403 Forbidden`, revisa que:
+
+- El token tenga el scope `read:packages`
+- El token no haya expirado
+- `gpr.user` sea tu usuario de GitHub (no el email)
 
 ---
 
@@ -169,10 +266,10 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 
 ```
 napoli-kmm-base/
-├── base/                                    # Módulo KMM principal
+├── base-kmp/                                # Módulo KMM principal
 │   ├── src/
 │   │   ├── commonMain/                     # Código compartido
-│   │   │   └── kotlin/com/baldomeronapoli/kmm/base/
+│   │   │   └── kotlin/cl/baldomeronapoli/base/
 │   │   │       ├── di/                     # Inyección de dependencias
 │   │   │       ├── domain/                 # Capa de dominio
 │   │   │       │   ├── models/            # Modelos de dominio
@@ -191,7 +288,6 @@ napoli-kmm-base/
 │   │   ├── iosMain/                       # Implementaciones iOS
 │   │   └── commonTest/                    # Tests compartidos
 │   └── build.gradle.kts
-├── iosApp/                                 # App de ejemplo iOS
 ├── build.gradle.kts                        # Configuración raíz
 └── settings.gradle.kts
 ```
@@ -202,7 +298,7 @@ napoli-kmm-base/
 
 ### PRESENTATION LAYER
 
-**Ubicación**: `base/src/commonMain/kotlin/com/baldomeronapoli/kmm/base/presentation/`
+**Ubicación**: `base-kmp/src/commonMain/kotlin/cl/baldomeronapoli/base/presentation/`
 
 #### Componentes Core
 
@@ -268,7 +364,7 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
 
 ### DOMAIN LAYER
 
-**Ubicación**: `base/src/commonMain/kotlin/com/baldomeronapoli/kmm/base/domain/`
+**Ubicación**: `base-kmp/src/commonMain/kotlin/cl/baldomeronapoli/base/domain/`
 
 #### Use Cases
 
@@ -345,7 +441,7 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 
 ### FEATURE MANAGEMENT LAYER
 
-**Ubicación**: `base/src/commonMain/kotlin/com/baldomeronapoli/kmm/base/feature/`
+**Ubicación**: `base-kmp/src/commonMain/kotlin/cl/baldomeronapoli/base/feature/`
 
 #### Interfaces Core
 
@@ -520,7 +616,7 @@ Features cargadas bajo demanda, reducción de tamaño inicial
 
 ## Sistema de Navegación
 
-**Ubicación**: `base/src/commonMain/kotlin/com/baldomeronapoli/kmm/base/navigation/`
+**Ubicación**: `base-kmp/src/commonMain/kotlin/cl/baldomeronapoli/base/navigation/`
 
 ### Componentes Core
 
@@ -772,7 +868,7 @@ class UrgentAction : ViewAction, DoNotThrottle
 
 ### Android-Specific
 
-**Ubicación**: `base/src/androidMain/`
+**Ubicación**: `base-kmp/src/androidMain/`
 
 **DI Module** (`di/platformModule.android.kt`):
 
@@ -798,7 +894,7 @@ actual fun platformModule(): Module = module {
 
 ### iOS-Specific
 
-**Ubicación**: `base/src/iosMain/`
+**Ubicación**: `base-kmp/src/iosMain/`
 
 **DI Module** (`di/platformModule.ios.kt`):
 
@@ -829,7 +925,7 @@ actual fun platformModule(): Module = module {
 
 ## Utilidades y Extensiones
 
-**Ubicación**: `base/src/commonMain/kotlin/com/baldomeronapoli/kmm/base/utils/extensions/`
+**Ubicación**: `base-kmp/src/commonMain/kotlin/cl/baldomeronapoli/base/utils/extensions/`
 
 ### Flow Extensions
 
@@ -1263,78 +1359,10 @@ compose - compiler = "2.3.0"
 
 ## Configuración
 
-### 1. Gradle (Project Level)
+Una vez agregada la dependencia (ver [Instalación](#instalación)), inicializa Koin y registra tus
+features al arrancar la app.
 
-```kotlin
-// build.gradle.kts (root)
-plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.multiplatform) apply false
-    alias(libs.plugins.compose.multiplatform) apply false
-}
-```
-
-### 2. Gradle (Module Level)
-
-```kotlin
-// base/build.gradle.kts
-plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.compose.compiler)
-}
-
-kotlin {
-    androidTarget()
-
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "base"
-            isStatic = true
-        }
-    }
-
-    sourceSets {
-        commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.components.resources)
-            implementation(libs.androidx.navigation.compose)
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.Trace)
-        }
-
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.koin.android)
-        }
-    }
-}
-
-android {
-    namespace = "cl.baldomeronapoli.kmm.base"
-    compileSdk = 35
-
-    defaultConfig {
-        minSdk = 24
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-```
-
-### 3. Inicialización en la App
+### Inicialización en la App
 
 **Android:**
 
@@ -1388,36 +1416,36 @@ struct MyApp: App {
 
 ---
 
-## Publicación
+## Publicación (solo mantenedores)
 
-### Maven Local
+Esta sección es para quien mantiene la librería, no para consumidores (ver [Instalación](#instalación)
+si solo quieres usarla).
 
-```bash
-./gradlew publishToMavenLocal
-```
-
-### GitHub Packages
-
-```kotlin
-// Configurar en build.gradle.kts
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/USERNAME/REPO")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
-    }
-}
-```
+### Local (para probar antes de publicar)
 
 ```bash
-export GITHUB_ACTOR=your_username
-export GITHUB_TOKEN=your_token
-./gradlew publish
+./gradlew :base-kmp:publishToMavenLocal
+```
+
+### GitHub Packages (release oficial)
+
+La publicación está automatizada vía GitHub Actions (`.github/workflows/publish.yml`). El número
+de versión se toma del último tag de git.
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+El workflow corre en un runner macOS (necesario para compilar los targets iOS), y publica con el
+`GITHUB_TOKEN` automático de Actions — no requiere configurar secrets.
+
+Para publicar manualmente (ej. localmente con tus propias credenciales):
+
+```bash
+export GITHUB_ACTOR=tu_usuario
+export GITHUB_TOKEN=tu_token_con_scope_write:packages
+./gradlew :base-kmp:publishAllPublicationsToGitHubPackagesRepository
 ```
 
 ---

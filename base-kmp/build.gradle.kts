@@ -100,6 +100,15 @@ publishing {
             name = "Local"
             url = uri(layout.buildDirectory.dir("repo"))
         }
+
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/elNapoli/kmm-base")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 
