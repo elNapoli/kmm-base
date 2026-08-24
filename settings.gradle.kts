@@ -32,7 +32,7 @@ dependencyResolutionManagement {
             url = uri("https://maven.pkg.github.com/elNapoli/kmm-logger")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+                password = System.getenv("PAT_READ_PACKAGES") ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }

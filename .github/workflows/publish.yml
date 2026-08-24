@@ -32,3 +32,4 @@ jobs:
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PAT_READ_PACKAGES: ${{ secrets.PAT_READ_PACKAGES }}
