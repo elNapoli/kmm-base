@@ -6,6 +6,13 @@ Una librería completa y lista para producción que proporciona una arquitectura
 aplicaciones Android e iOS, con gestión de estado moderna, navegación modular y carga perezosa de
 features.
 
+> **v2.0.0**: la librería se separó en 3 módulos/artefactos independientes
+> (`base-kmp-domain`, `base-kmp-data`, `base-kmp-presentation`) en vez de un único `base-kmp`.
+> `domain` es Kotlin puro (sin Compose), `data` depende solo de `domain`, y `presentation`
+> depende solo de `domain` (nunca de `data`). Ver [Instalación](#instalación).
+>
+> `v1.0.0` (el módulo único `base-kmp`) sigue disponible para consumidores que no migren.
+
 ---
 
 ## Tabla de Contenidos
@@ -82,34 +89,70 @@ En el `libs.versions.toml` de tu proyecto:
 
 ```toml
 [versions]
-napoli-kmm-base = "1.0.0" # usa el último tag publicado del repo
+napoli-kmm-base = "2.0.0" # usa el último tag publicado del repo
 
 [libraries]
-napoli-kmm-base = { module = "cl.baldomeronapoli:base-kmp", version.ref = "napoli-kmm-base" }
+napoli-kmm-base-domain = { module = "cl.baldomeronapoli:base-kmp-domain", version.ref = "napoli-kmm-base" }
+napoli-kmm-base-data = { module = "cl.baldomeronapoli:base-kmp-data", version.ref = "napoli-kmm-base" }
+napoli-kmm-base-presentation = { module = "cl.baldomeronapoli:base-kmp-presentation", version.ref = "napoli-kmm-base" }
 ```
 
-Y en el `build.gradle.kts` de tu módulo (`commonMain` si es KMP, o directo en `dependencies` si es solo Android):
+Cada módulo consumidor declara solo lo que necesita. Un módulo `domain` de un feature (Kotlin
+puro, sin Compose) típicamente solo necesita:
 
 ```kotlin
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.napoli.kmm.base)
+            api(libs.napoli.kmm.base.domain)
         }
     }
 }
 ```
 
-O sin version catalog:
+Un módulo `data` (repos + datasources) también solo necesita `domain`:
 
 ```kotlin
-dependencies {
-    implementation("cl.baldomeronapoli:base-kmp:1.0.0")
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            api(libs.napoli.kmm.base.domain)
+        }
+    }
+}
+```
+
+Un módulo `presentation` (ViewModels, Compose, navegación) necesita `presentation`, que ya trae
+`domain` transitivamente vía `api()`:
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            api(libs.napoli.kmm.base.presentation)
+        }
+    }
+}
+```
+
+El módulo `app` (o quien ensambla todo) es el único que necesita los 3, ya que registra tanto los
+`Module` de Koin de `data` como los de `presentation`:
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.napoli.kmm.base.domain)
+            implementation(libs.napoli.kmm.base.data)
+            implementation(libs.napoli.kmm.base.presentation)
+        }
+    }
 }
 ```
 
 > Revisa los [tags del repositorio](https://github.com/elNapoli/kmm-base/tags) para saber cuál es
-> la última versión publicada.
+> la última versión publicada. Los tags `v1.x.x` publican el artefacto único `base-kmp`
+> (deprecado); desde `v2.0.0` se publican los 3 artefactos separados.
 
 ### 5. Sincronizar
 
@@ -266,31 +309,36 @@ abstract class FlowUseCase<P, T, E : UseCaseError>(
 
 ```
 napoli-kmm-base/
-├── base-kmp/                                # Módulo KMM principal
-│   ├── src/
-│   │   ├── commonMain/                     # Código compartido
-│   │   │   └── kotlin/cl/baldomeronapoli/base/
-│   │   │       ├── di/                     # Inyección de dependencias
-│   │   │       ├── domain/                 # Capa de dominio
-│   │   │       │   ├── models/            # Modelos de dominio
-│   │   │       │   ├── providers/         # Providers
-│   │   │       │   ├── repositories/      # Interfaces de repositorios
-│   │   │       │   └── usecases/          # Use cases
-│   │   │       ├── feature/               # Sistema de features
-│   │   │       ├── navigation/            # Sistema de navegación
-│   │   │       ├── presentation/          # Capa de presentación
-│   │   │       │   ├── viewmodel/        # BaseViewModel
-│   │   │       │   ├── action/           # Procesadores de acciones
-│   │   │       │   ├── state/            # Interceptores de estado
-│   │   │       │   └── models/           # Modelos de UI
-│   │   │       └── utils/                # Utilidades y extensiones
-│   │   ├── androidMain/                   # Implementaciones Android
-│   │   ├── iosMain/                       # Implementaciones iOS
-│   │   └── commonTest/                    # Tests compartidos
-│   └── build.gradle.kts
-├── build.gradle.kts                        # Configuración raíz
+├── base-kmp-domain/                          # Kotlin puro, sin Compose
+│   └── src/commonMain/kotlin/cl/baldomeronapoli/base/
+│       ├── domain/
+│       │   ├── models/                       # ConnectionState, ConnectionType, Destination, NetworkMonitor
+│       │   ├── repository/                   # SyncableRepository
+│       │   ├── sync/                         # ChangeTracker, SyncStrategy, AutoSyncOrchestrator
+│       │   └── usecases/                     # FlowUseCase, UseCaseState, UseCaseError, ExceptionHandler
+│       ├── feature/                           # Feature, AsyncFeature, ConfigurableFeature, FeatureConfig
+│       ├── navigation/                        # NavigationCommand (marker)
+│       └── presentation/                      # Mutation, ViewAction, ViewEffect (triviales, sin Compose)
+├── base-kmp-data/                             # Depende solo de domain
+│   └── src/commonMain/kotlin/cl/baldomeronapoli/base/
+│       └── di/                                # BaseModule (wiring de AutoSyncOrchestrator/NetworkMonitor)
+├── base-kmp-presentation/                     # Depende solo de domain. Compose + navigation-compose
+│   └── src/commonMain/kotlin/cl/baldomeronapoli/base/
+│       ├── domain/models/                     # CustomComposable (necesita ComposableProvider)
+│       ├── feature/                           # NavigableFeature, FeatureManager, FeatureBuilder, LazyFeatureLoader, LazyNavigation
+│       ├── navigation/                        # NavigationCoordinator, NavigationHandler
+│       ├── presentation/
+│       │   ├── viewmodel/                    # BaseViewModel
+│       │   ├── action/                       # ActionProcessor, ActionInterceptor
+│       │   ├── state/                        # StateInterceptor
+│       │   └── model/                        # UiText, UserMessage, MessageType, ComposableProvider
+│       └── utils/extensions/                  # Flow, koinViewModel, NavControllerExtensions
+├── build.gradle.kts                          # Configuración raíz
 └── settings.gradle.kts
 ```
+
+**Regla de dependencias**: `data` y `presentation` dependen solo de `domain`, nunca entre sí.
+Solo el módulo consumidor final (`app`) depende de los 3.
 
 ---
 
@@ -1424,7 +1472,7 @@ si solo quieres usarla).
 ### Local (para probar antes de publicar)
 
 ```bash
-./gradlew :base-kmp:publishToMavenLocal
+./gradlew :base-kmp-domain:publishToMavenLocal :base-kmp-data:publishToMavenLocal :base-kmp-presentation:publishToMavenLocal
 ```
 
 ### GitHub Packages (release oficial)
@@ -1433,8 +1481,8 @@ La publicación está automatizada vía GitHub Actions (`.github/workflows/publi
 de versión se toma del último tag de git.
 
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+git tag v2.0.0
+git push origin v2.0.0
 ```
 
 El workflow corre en un runner macOS (necesario para compilar los targets iOS), y publica con el
@@ -1445,7 +1493,7 @@ Para publicar manualmente (ej. localmente con tus propias credenciales):
 ```bash
 export GITHUB_ACTOR=tu_usuario
 export GITHUB_TOKEN=tu_token_con_scope_write:packages
-./gradlew :base-kmp:publishAllPublicationsToGitHubPackagesRepository
+./gradlew :base-kmp-domain:publishAllPublicationsToGitHubPackagesRepository :base-kmp-data:publishAllPublicationsToGitHubPackagesRepository :base-kmp-presentation:publishAllPublicationsToGitHubPackagesRepository
 ```
 
 ---
