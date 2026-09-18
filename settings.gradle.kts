@@ -38,4 +38,6 @@ dependencyResolutionManagement {
     }
 }
 
-include(":base-kmp")
+include(":base-kmp-domain")
+include(":base-kmp-data")
+include(":base-kmp-presentation")
