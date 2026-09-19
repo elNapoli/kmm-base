@@ -46,7 +46,7 @@ fun LazyFeatureLoader(
     content: @Composable () -> Unit
 ) {
     val featureManager = remember {
-        KoinPlatformTools.defaultContext().get().get<FeatureManager>()
+        KoinPlatformTools.defaultContext().get().get<FeatureLoader>()
     }
 
     var loadState by remember(featureName) {

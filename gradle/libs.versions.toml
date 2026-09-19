@@ -17,8 +17,11 @@ runtime = "1.10.0"
 uiToolingPreview = "1.10.0"
 koin = "4.1.1"
 napoli-logger = "1.0.0"
+napoli-navigation = "2.2.0"
 [libraries]
 napoli-logger-kmp = { module = "cl.baldomeronapoli:logger-kmp", version.ref = "napoli-logger" }
+napoli-navigation-domain = { module = "cl.baldomeronapoli:navigation-kmp-domain", version.ref = "napoli-navigation" }
+napoli-navigation-presentation = { module = "cl.baldomeronapoli:navigation-kmp-presentation", version.ref = "napoli-navigation" }
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "componentsResources" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }

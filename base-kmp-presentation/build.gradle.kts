@@ -43,7 +43,10 @@ kotlin {
             implementation(libs.koin.android)
         }
         commonMain.dependencies {
-            api(project(":base-kmp-domain"))
+            api(projects.baseKmpDomain)
+            // api(): NavigableFeature/FeatureBuilder exponen NavigationCoordinator
+            // (de napoli-kmm-navigation) en su firma publica.
+            api(libs.napoli.navigation.presentation)
             implementation(libs.bundles.koin.common)
 
             implementation(libs.bundles.jetbrains.compose)
