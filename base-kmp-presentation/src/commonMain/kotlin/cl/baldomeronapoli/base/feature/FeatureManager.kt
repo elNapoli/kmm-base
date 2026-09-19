@@ -1,7 +1,5 @@
 package cl.baldomeronapoli.base.feature
 
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import cl.baldomeronapoli.logger.Trace
 import org.koin.core.context.loadKoinModules
 import org.koin.core.module.Module
@@ -9,8 +7,13 @@ import org.koin.core.module.Module
 /**
  * Gestor centralizado de features.
  * Maneja el ciclo de vida, inicialización y registro de todos los features.
+ *
+ * [NavController] y [NavGraphBuilder] son los tipos concretos de la
+ * plataforma UI (ej. `androidx.navigation.NavHostController` y
+ * `androidx.navigation.NavGraphBuilder` en Compose), para que este
+ * módulo no dependa de ninguna librería de navegación.
  */
-class FeatureManager {
+class FeatureManager<NavController, NavGraphBuilder> : FeatureLoader {
 
     private val features = mutableListOf<Feature>()
     private val initializedFeatures = mutableSetOf<String>()
@@ -59,7 +62,7 @@ class FeatureManager {
      * @param featureName Nombre del feature
      * @return true si los módulos del feature ya están cargados
      */
-    fun isFeatureLoaded(featureName: String): Boolean {
+    override fun isFeatureLoaded(featureName: String): Boolean {
         return featureName in loadedModules
     }
 
@@ -81,7 +84,7 @@ class FeatureManager {
      * @return true si se cargaron los módulos, false si ya estaban cargados
      * @throws IllegalStateException si el feature no está registrado
      */
-    fun loadFeatureModules(featureName: String): Boolean {
+    override fun loadFeatureModules(featureName: String): Boolean {
         if (featureName in loadedModules) {
             Trace.d(TAG, "Feature '$featureName' modules already loaded")
 
@@ -138,7 +141,7 @@ class FeatureManager {
     /**
      * Inicializa un feature específico.
      */
-    fun initializeFeature(featureName: String) {
+    override fun initializeFeature(featureName: String) {
         if (featureName in initializedFeatures) {
             return  // Ya inicializado
         }
@@ -167,8 +170,8 @@ class FeatureManager {
     /**
      * Notifica a features con navegación cuando el NavController está listo.
      */
-    fun notifyNavigationReady(navController: NavHostController) {
-        features.filterIsInstance<NavigableFeature>()
+    fun notifyNavigationReady(navController: NavController) {
+        features.filterIsInstance<NavigableFeature<NavController, NavGraphBuilder>>()
             .forEach { it.onNavigationReady(navController) }
     }
 
@@ -219,7 +222,7 @@ class FeatureManager {
      */
     fun NavGraphBuilder.registerAllNavigationRoutes() {
         features
-            .filterIsInstance<NavigableFeature>()  // ← Solo features con navegación
+            .filterIsInstance<NavigableFeature<NavController, NavGraphBuilder>>()  // ← Solo features con navegación
             .forEach { feature ->
                 with(feature) {
                     registerNavigation()

@@ -1,8 +1,6 @@
 package cl.baldomeronapoli.base.feature
 
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import cl.baldomeronapoli.base.navigation.NavigationCoordinator
+import cl.baldomeronapoli.navigation.data.repository.NavigationCoordinator
 import org.koin.core.module.Module
 
 
@@ -12,6 +10,11 @@ import org.koin.core.module.Module
 
 /**
  * Builder DSL para crear features de forma declarativa.
+ *
+ * [NavController] y [NavGraphBuilder] son los tipos concretos de la
+ * plataforma UI (ej. `androidx.navigation.NavHostController` y
+ * `androidx.navigation.NavGraphBuilder` en Compose), para que este
+ * módulo no dependa de ninguna librería de navegación.
  *
  * El builder decide automáticamente qué tipo de Feature crear:
  * - Si defines `.navigation { }` → crea NavigationAwareFeature
@@ -29,7 +32,7 @@ import org.koin.core.module.Module
  * }
  *
  * // Feature CON navegación (ej: Login, Home)
- * val loginFeature = feature("login") {
+ * val loginFeature = feature<NavHostController, NavGraphBuilder>("login") {
  *     priority(100)
  *     dependencies { listOf(loginModule) }
  *     navigation {
@@ -43,7 +46,7 @@ import org.koin.core.module.Module
  * }
  * ```
  */
-class FeatureBuilder(private val name: String) {
+class FeatureBuilder<NavController, NavGraphBuilder>(private val name: String) {
 
     private var priorityValue: Int = 100
     private var dependenciesProvider: () -> List<Module> = { emptyList() }
@@ -73,10 +76,10 @@ class FeatureBuilder(private val name: String) {
 
     fun build(): Feature {
         return if (navigationRegistration != null) {
-            object : NavigableFeature {
+            object : NavigableFeature<NavController, NavGraphBuilder> {
                 override val featureName: String = name
                 override val priority: Int = priorityValue
-                override var navigationCoordinator: NavigationCoordinator? = null
+                override var navigationCoordinator: NavigationCoordinator<NavController>? = null
 
                 override fun provideDependencies(): List<Module> = dependenciesProvider()
 
@@ -88,7 +91,7 @@ class FeatureBuilder(private val name: String) {
                     initializationBlock()
                 }
 
-                override fun onNavigationReady(navController: NavHostController) {
+                override fun onNavigationReady(navController: NavController) {
                     // Default: no hace nada
                 }
 
@@ -118,9 +121,9 @@ class FeatureBuilder(private val name: String) {
 /**
  * DSL function para crear features fácilmente.
  */
-fun feature(name: String, block: FeatureBuilder.() -> Unit): Feature {
-    return FeatureBuilder(name).apply(block).build()
+fun <NavController, NavGraphBuilder> feature(
+    name: String,
+    block: FeatureBuilder<NavController, NavGraphBuilder>.() -> Unit,
+): Feature {
+    return FeatureBuilder<NavController, NavGraphBuilder>(name).apply(block).build()
 }
-
-
-
