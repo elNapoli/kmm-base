@@ -35,7 +35,13 @@ abstract class FlowUseCase<PARAM, RESULT, ERROR : UseCaseError>(
                 emit(UseCaseState.Loading())
             }
             .catch { throwable ->
-                Trace.e("Error in FlowUseCase", throwable)
+                // WARN, no ERROR: este catch atrapa tanto errores de negocio
+                // esperados (credenciales invalidas, validacion) como fallos
+                // tecnicos inesperados. ERROR llega a Crashlytics como
+                // non-fatal y con errores de negocio eso satura el dashboard.
+                // Un crash real (uncaught exception) lo captura Crashlytics
+                // directo, sin pasar por aca.
+                Trace.w("Error in FlowUseCase", throwable)
                 val error = exceptionHandler?.crash(throwable)
                 emit(UseCaseState.Error(error))
             }
