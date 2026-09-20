@@ -9,6 +9,7 @@ import cl.baldomeronapoli.base.presentation.ViewState
 import cl.baldomeronapoli.base.presentation.action.ActionInterceptor
 import cl.baldomeronapoli.base.presentation.state.StateInterceptor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,8 +32,9 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
     protected open val stateInterceptor: StateInterceptor<S>? = null
     protected open val actionInterceptor: ActionInterceptor<A>? = null
 
-    private val actionChannel = Channel<A>()
-    private val effectChannel = Channel<E>()
+    private val actionChannel = Channel<A>(capacity = Channel.UNLIMITED)
+    private val effectChannel =
+        Channel<E>(capacity = Channel.BUFFERED, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     val effect = effectChannel.receiveAsFlow()
 
@@ -61,7 +63,7 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
         }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
             initialValue = initialState
         )
 
@@ -76,7 +78,7 @@ abstract class BaseViewModel<S : ViewState, A : ViewAction, E : ViewEffect>(
         }
     }
 
-    protected fun <S> noMutation(): Flow<Mutation<S>> = flowOf { it }
+    protected fun noMutation(): Flow<Mutation<S>> = flowOf { state -> state }
 
     protected fun sendEffect(effect: E) {
         viewModelScope.launch {
